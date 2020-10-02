@@ -4,13 +4,16 @@ import pl.coderslab.BCrypt;
 import pl.coderslab.DbUtil;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UserDAO {
 
     private static final String CREATE_USER_QUERY = "INSERT INTO users(username, email, password) VALUES (?, ?, ?)";
-    private static final String READ_USER_QUERY = "SELECT * FROM users WHERE id = ?";
-    private static final String UPDATE_USER_QUERY = "UPDATE users SET username = ?, email = ?, password=? WHERE id = ?";
-    private static final String DELETE_USER_QUERY = "DELETE FROM users WHERE id = ?";
+    private static final String READ_USER_QUERY = "SELECT * FROM users WHERE id =?";
+    private static final String UPDATE_USER_QUERY = "UPDATE users SET username =?, email =?, password=? WHERE id =?";
+    private static final String DELETE_USER_QUERY = "DELETE FROM users WHERE id =?";
+    private static final String FINDALL_USER_QUERY = "SELECT * FROM users";
 
     public User create(User user) {
 
@@ -91,6 +94,27 @@ public class UserDAO {
             e.printStackTrace();
         }
     }
+
+    public List<User> findAll() {
+        try (Connection conn = DbUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(FINDALL_USER_QUERY)) {
+            ResultSet rs = ps.executeQuery();
+            List<User> list = new ArrayList<>();
+            while (rs.next()) {
+                User user = new User();
+                user.setId(rs.getInt("id"));
+                user.setEmail(rs.getString("email"));
+                user.setUsername(rs.getString("username"));
+                user.setPassword(rs.getString("password"));
+                list.add(user);
+            }
+            return list;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 
     public String hashPassword(String password) {
         return BCrypt.hashpw(password, BCrypt.gensalt());
